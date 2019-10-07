@@ -28,6 +28,7 @@ void setup(){                                                                   
                 case MOD_BUZ:         Serial.print  (F("звукоизлучатель"));   break;   //
                 case MOD_DHT:         Serial.print  (F("датчик DHT"));        break;   //
                 case MOD_DSL:         Serial.print  (F("датчик света"));      break;   //
+                case MOD_EXT:         Serial.print  (F("расширитель"));       break;   //
                 case MOD_8X8:         Serial.print  (F("матрица 8х8"));       break;   //
                 default:              Serial.print  (F("не определён"));      break;   //
             }                         Serial.print  (F(",\tверсия "));                 // - выводим
