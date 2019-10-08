@@ -15,8 +15,8 @@
 |--|--|
 | ![](https://wiki.iarduino.ru/img/resources/1049/1049.svg) | https://iarduino.ru/shop/Expansion-payments/led-matrica-8x8---i2c-metro-modul.html |
 | ![](https://wiki.iarduino.ru/img/resources/1013/1013.svg) | https://iarduino.ru/shop/Expansion-payments/rgb-svetodiod---i2c-metro-modul.html |
-| ![](https://wiki.iarduino.ru/img/resources/1017/1017.svg) | https://iarduino.ru/shop/Sensory-Datchiki/metro\_luxmeter.html |
-| ![](https://wiki.iarduino.ru/img/resources/1016/1016.svg) | https://iarduino.ru/shop/Sensory-Datchiki/metro\_temperature\_humidity.html |
+| ![](https://wiki.iarduino.ru/img/resources/1017/1017.svg) | https://iarduino.ru/shop/Sensory-Datchiki/metro_luxmeter.html |
+| ![](https://wiki.iarduino.ru/img/resources/1016/1016.svg) | https://iarduino.ru/shop/Sensory-Datchiki/metro_temperature_humidity.html |
 | ![](https://wiki.iarduino.ru/img/resources/1015/1015.svg) | https://iarduino.ru/shop/Expansion-payments/zummer---i2c-metro-modul.html |
 | ![](https://wiki.iarduino.ru/img/resources/1014/1014.svg) | https://iarduino.ru/shop/Expansion-payments/knopka---i2c-metro-modul.html |
 | ![]() | Скоро здесь будет расширитель выводов |
