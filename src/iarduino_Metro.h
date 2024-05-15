@@ -1,5 +1,5 @@
 //	Библиотека для работы с модулями линейки «Метро».
-//  Версия: 1.3.2
+//  Версия: 1.3.3
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: http://iarduino.ru/file/489.html
 //  Подробное описание функции бибилиотеки доступно по ссылке: http://iarduino.ru/file/489.html
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -17,9 +17,17 @@
 #include		<WProgram.h>																		//
 #endif																								//
 																									//
-#include		<memorysaver.h>																		//	Подключаем файл «хранитель памяти»									(внутри файла есть комментарий поясняющий как сэкономить память программ)
-#include		<iarduino_Metro_I2C.h>																//	Подключаем файл iarduino_Metro_I2C.h - для работы с шиной I2C		(используя функции структуры iI2C)
-iarduino_I2C	objI2C;																				//	Создаём объект для работы с шиной I2C
+#include		"memorysaver.h"																		//	Подключаем файл «хранитель памяти»									(внутри файла есть комментарий поясняющий как сэкономить память программ)
+#include		"iarduino_Metro_I2C.h"																//	Подключаем библиотеку выбора реализации шины I2C.
+																									//
+#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire или платы её поддерживают...
+#include	<Wire.h>																				//	Разрешаем использовать библиотеку Wire в данной библиотеке.
+#endif																								//
+#if defined( iarduino_I2C_Software_h )																//	Если библиотека iarduino_I2C_Software подключена в скетче...
+#include	<iarduino_I2C_Software.h>																//	Разрешаем использовать библиотеку iarduino_I2C_Software в данной библиотеке.
+#endif																								//
+																									//
+iarduino_I2C_Select iMetroI2C;																		//	Создаём глобальный объект работы с шиной I2C.
 																									//
 #define			PIN_ARDUINO_ADR			12															//	Номер вывода Arduino используемый для установки адреса первого модуля.
 #define			MEM_ARDUINO_FREE		250															//	Количество байт ОЗУ которое требуется оставить свободными при формировании массива объектов Metro.
@@ -146,7 +154,8 @@ class iarduino_Metro{																				//
 		bool		begin		(int	i0=NOT2														){									return						objClass -> begin	(i0, int(address)		);	}		//	Инициируем работу с модулем.
 		int			test		(int	i0=NOT2														){									return						objClass -> test	(i0, int(address)		);	}		//	Инициируем самотестирование модуля.
 		int			read		(int	i0=NOT2,	int	i1=NOT2										){	switch(model){	/************	Кнопка:						**/														//
-																														case MOD_KEY:								objClass -> action	(1,  int(address)		);			//	Читаем данные с кнопки.
+																														case MOD_KEY:	if(i0 != KEY_SUM){			objClass -> action	(1,  int(address)		);	}		//	Читаем данные с кнопки.
+																																		else             {			objClass -> action	(2,  int(address)		);	}		//	Читаем количество нажатий на кнопку.
 																																		switch(i0){																			//	Возвращаем только требуемое значение:
 																																			case KEY_PUSHED:		return int(	objClass -> getVar	(0			));	break;	//	Возвращаем событие кнопка нажимается.
 																																			case KEY_RELEASED:		return int(	objClass -> getVar	(1			));	break;	//	Возвращаем событие кнопка отпускается.
@@ -421,32 +430,31 @@ class iarduino_Metro{																				//
 };		iarduino_Metro			*Metro;																//	Объявляем указатель на объект основного класса библиотеки.	(далее указатель будет ссылаться на массив объектов основного класа)
 																									//
 //	Функция начальной инициализации модулей:														//
-uint8_t iarduino_Metro_Start(uint8_t pinAddres = PIN_ARDUINO_ADR){									//	В качестве аргумента функции можно указать номер вывода к которому подключен вход PIN_ADDRES первого модуля.
+uint8_t _iarduino_Metro_Start(uint8_t pinAddres){													//	Параметр: номер вывода к которому подключен вход PIN_ADDRES первого модуля.
 			pinMode(pinAddres, OUTPUT);																//	Переводим вывод pinAddres в режим выхода.
 			digitalWrite(pinAddres, LOW);															//	Устанавливаем низкий логический уровень на выходе pinAddres.
-			objI2C.begin(100);																		//	Инициируем работу по шине I2C на скорости 100 кГц.
 			uint8_t Module_Another[127];															//	Объявляем массив для хранения адресов сторонних модулей на шине I2C.
 			uint8_t Module_Another_SUM=0;															//	Определяем переменную для хранения количества сторонних модулей на шине I2C.
 			uint8_t Module_Metro[127];																//	Объявляем массив для хранения адресов модулей на шине I2C принадлежащих линейке.
 			uint8_t Module_Metro_SUM=0;																//	Определяем переменную для хранения количества модулей на шине I2C принадлежащих линейке.
 			uint8_t i,j,k,f;																		//	Объявляем временные переменные.
 		//	Устанавливаем адрес DEF_ADDRESS всем модулям линейки на шине I2C:						//
-			digitalWrite(pinAddres, HIGH);	delay(5);												//	Устанавливаем высокий логический уровень на выходе pinAddres, тогда первый модуль примет адрес DEF_ADDRESS.
-			digitalWrite(pinAddres, LOW);	delay(5);												//	Устанавливаем низкий логический уровень на выходе pinAddres.
-			for(i=1; i<255; i++){																	//	Проходим по всем адресам на шине I2C.
-				objI2C.writeByte(DEF_ADDRESS, REG_BITS_0, 1);	delay(5);							//	Указываем модулю с адресом DEF_ADDRESS установить 1 на выходе PIN_OUTPUT, тогда следующий модуль примет адрес DEF_ADDRESS.
-			}	objI2C.writeByte(DEF_ADDRESS, REG_BITS_0, 0);	delay(5);							//	Указываем модулю с адресом DEF_ADDRESS установить 0 на выходе PIN_OUTPUT.
+			digitalWrite(pinAddres, HIGH); delay(5);												//	Устанавливаем высокий логический уровень на выходе pinAddres, тогда первый модуль примет адрес DEF_ADDRESS.
+			digitalWrite(pinAddres, LOW ); delay(5);												//	Устанавливаем низкий логический уровень на выходе pinAddres.
+			for( i=1; i<255; i++ ){																	//	Проходим по всем адресам на шине I2C.
+				iMetroI2C.writeByte(DEF_ADDRESS, REG_BITS_0, 1); delay(5);							//	Указываем модулю с адресом DEF_ADDRESS установить 1 на выходе PIN_OUTPUT, тогда следующий модуль примет адрес DEF_ADDRESS.
+			}	iMetroI2C.writeByte(DEF_ADDRESS, REG_BITS_0, 0); delay(5);							//	Указываем модулю с адресом DEF_ADDRESS установить 0 на выходе PIN_OUTPUT.
 		//	Определяем адреса всех сторонних модулей на шине I2C:									//
-			for(i=1; i<127; i++){																	//	Проходим по всем адресам на шине I2C
-				if(i!=DEF_ADDRESS){																	//	Пропуская адрес DEF_ADDRESS
-					if(objI2C.checkAddress(i)){														//	Если на шине I2C есть устройство с адресом i, то ...
+			for( i=1; i<127; i++ ){																	//	Проходим по всем адресам на шине I2C
+				if( i!=DEF_ADDRESS ){																//	Пропуская адрес DEF_ADDRESS
+					if( iMetroI2C.checkAddress(i) ){												//	Если на шине I2C есть устройство с адресом i, то ...
 						Module_Another[Module_Another_SUM]=i; Module_Another_SUM++;					//	Добавляем указанный адрес в очередной элемент массива Module_Another и увеличиваем счётчик количества сторонних модулей на шине I2C.
 					}	delay(5);																	//	Устанавливаем задержку между запросами.
 				}																					//
 			}																						//
 		//	Переназначаем адреса модулям линейки:													//
 			i=DEF_ADDRESS;																			//	Присваиваем переменной i адрес DEF_ADDRESS.
-			objI2C.writeByte(DEF_ADDRESS, REG_BITS_0, 0);											//	Указываем всем модулям с адресом DEF_ADDRESS установить 0 на своём выходе PIN_OUTPUT (на случай, если у какого нибудь модуля уже была установлена 1).
+			iMetroI2C.writeByte(DEF_ADDRESS, REG_BITS_0, 0);										//	Указываем всем модулям с адресом DEF_ADDRESS установить 0 на своём выходе PIN_OUTPUT (на случай, если у какого нибудь модуля уже была установлена 1).
 			delay(5);																				//	Устанавливаем задержку, дав модулям установить 0 на выходе и понять, что 0 установлен и на входе (т.к. выход предыдущего модуля соеденён со входом следующего).
 			do{	k=i;																				//	Сохраняем адрес i в переменную k.
 			//	Определяем новый адрес для очередного модуля в переменную i:						//
@@ -456,20 +464,20 @@ uint8_t iarduino_Metro_Start(uint8_t pinAddres = PIN_ARDUINO_ADR){									//	В
 				j=10;																				//	Определяем количество попыток присвоения нового адреса очередному модулю.
 				do{ j--; f=0;																		//	Уменьшаем количество попыток j и сбрасываем флаг f - он будет установлен, если модуль примет новый адрес.
 					if(k==DEF_ADDRESS){digitalWrite(pinAddres, HIGH);}								//	Если это первый проход цикла установки адресов, то устанавливаем высокий логический уровень на выходе pinAddres.
-					else{objI2C.writeByte(k, REG_BITS_0, 1);}										//	Иначе, указываем модулю с адресом k установить логическую «1» на выходе PIN_OUTPUT.
+					else{iMetroI2C.writeByte(k, REG_BITS_0, 1);}									//	Иначе, указываем модулю с адресом k установить логическую «1» на выходе PIN_OUTPUT.
 					delay(5);																		//	Устанавливаем задержку, дав модулю с адресом k установить логическую «1» на выходе, а следующему за ним модулю (с адресом DEF_ADDRESS), понять, что на его входе установилась логическая «1».
-					objI2C.writeByte(DEF_ADDRESS, REG_ADDRESS, ((i<<1)|1));							//	Указываем модулю c адресом DEF_ADDRESS сменить свой адрес c DEF_ADDRESS на i, но только в том случае, если на его входе PIN_ADDRES присутствует уровень логической «1».
+					iMetroI2C.writeByte(DEF_ADDRESS, REG_ADDRESS, ((i<<1)|1));						//	Указываем модулю c адресом DEF_ADDRESS сменить свой адрес c DEF_ADDRESS на i, но только в том случае, если на его входе PIN_ADDRES присутствует уровень логической «1».
 					delay(50);																		//	Устанавливаем задержку, дав модулю с адресом DEF_ADDRESS и логической «1» на входе, сменить свой адрес на i сохранив его во FLASH памяти.
 					if(k==DEF_ADDRESS){digitalWrite(pinAddres, LOW);}								//	Если это первый проход цикла установки адресов, то устанавливаем низкий логический уровень на выходе pinAddres.
-					else{objI2C.writeByte(k, REG_BITS_0, 0);}										//	Иначе, указываем модулю с адресом k установить логический «0» на выходе PIN_OUTPUT.
+					else{iMetroI2C.writeByte(k, REG_BITS_0, 0);}									//	Иначе, указываем модулю с адресом k установить логический «0» на выходе PIN_OUTPUT.
 					delay(5);																		//	Устанавливаем задержку, дав модулю с адресом k установить логический «0» на выходе PIN_OUTPUT, а следующему за ним модулю (с адресом i), понять, что на его входе PIN_ADDRES установился логический «0».
-					if( objI2C.checkAddress(i) && objI2C.checkAddress(i) ){f=1;}					//	Дважды проверяем, появилось ли на шине I2C устройство с адресом i, если да, то флаг f будет установлен.
+					if( iMetroI2C.checkAddress(i) && iMetroI2C.checkAddress(i) ){f=1;}				//	Дважды проверяем, появилось ли на шине I2C устройство с адресом i, если да, то флаг f будет установлен.
 				}																					//
 				while(f==0 && j>0);																	//	Если флаг f сброшен (модуль не сменил адрес на i) но ещё остались попытки j, то пытаемся сменить адрес повторно.
 				delay(5);																			//	Устанавливаем задержку.
 				if(f){Module_Metro[Module_Metro_SUM]=i; Module_Metro_SUM++;}						//	Если флаг f установлен (модуль принял адрес), то сохраняем адрес модуля в массив Module_Metro и увеличиваем счётчик найденных модулей линейки Module_Metro_SUM.
 			}																						//
-			while (f && (objI2C.readByte(i, REG_FLAGS_0)&1)==0);									//	Если флаг f установлен (модуль принял адрес) и на выходе PIN_OUTPUT модуля с адресом i установлен логический 0, значит за ним есть еще модуль, тогда остаёмся цикле установки адресов.
+			while (f && (iMetroI2C.readByte(i, REG_FLAGS_0)&1)==0);									//	Если флаг f установлен (модуль принял адрес) и на выходе PIN_OUTPUT модуля с адресом i установлен логический 0, значит за ним есть еще модуль, тогда остаёмся цикле установки адресов.
 		//	Даём дополнительное время модулям перед началом работы:									//
 			delay(100);																				//
 		//	Переопределяем массив объектов:															//
@@ -483,15 +491,15 @@ uint8_t iarduino_Metro_Start(uint8_t pinAddres = PIN_ARDUINO_ADR){									//	В
 			for(i=0; i<Module_Metro_SUM; i++){														//	Проходим по всем найденным модулям линейки.
 				j=100;																				//	Определяем количество попыток считывания типа модуля.
 				k=0;																				//	Определяем переменную для временного хранения типа модуля.
-				do{ k = objI2C.readByte(Module_Metro[i], REG_MODEL); j--; delay(5); }				//	Считываем тип модуля k и уменьшаем количество попыток j.
+				do{ k = iMetroI2C.readByte(Module_Metro[i], REG_MODEL); j--; delay(5); }			//	Считываем тип модуля k и уменьшаем количество попыток j.
 				while( k==0 && j>0 );																//	Если тип не определён но остались попытки, то повторяем считывание.
 				#if defined(__AVR_ATmega32U4__) | defined(__AVR_ATmega328__) | defined(__AVR_ATmega328P__) | defined(__AVR_ATmega1280__) | defined(__AVR_ATmega1281__) | defined(__AVR_ATmega1284P__) | defined(__AVR_ATmega2560__) | defined(__AVR_ATmega2561__)
 					heapEnd = (__brkval==0)? (int)&__heap_start : (int)__brkval;					//	Определяем адрес конца «кучи» до переопределения очередного элемента массива объектов.
 					if( (heapEnd+MEM_ARDUINO_FREE ) > int(SP) ){return (i==0?0:(i-1));}				//	Если конец кучи + MEM_ARDUINO_FREE байт залезит на стек, то выходим из функции возвращая количество модулей объекты которых уже были определены (=i-1).
 				#endif																				//
-				Metro[i]          = k;																//	Переопределяем объект в соответствии с типом модуля.
-				Metro[i].address   = Module_Metro[i];												//	Сохраняем адрес модуля.
-				Metro[i].version  = objI2C.readByte(Module_Metro[i], REG_VERSION);					//	Сохраняем версию прошивки модуля.
+				Metro[i]         = k;																//	Переопределяем объект в соответствии с типом модуля.
+				Metro[i].address = Module_Metro[i];													//	Сохраняем адрес модуля.
+				Metro[i].version = iMetroI2C.readByte(Module_Metro[i], REG_VERSION);				//	Сохраняем версию прошивки модуля.
 				#if defined(__AVR_ATmega32U4__) | defined(__AVR_ATmega328__) | defined(__AVR_ATmega328P__) | defined(__AVR_ATmega1280__) | defined(__AVR_ATmega1281__) | defined(__AVR_ATmega1284P__) | defined(__AVR_ATmega2560__) | defined(__AVR_ATmega2561__)
 					Metro[i].size = ((__brkval==0)? (int)&__heap_start:(int)__brkval)-heapEnd;		//	Определяем размер ОЗУ занимаемый объектом Metro[i] как разница адресов конца «кучи» до и после переопределения объекта Metro[i].
 				#endif																				//
@@ -500,5 +508,13 @@ uint8_t iarduino_Metro_Start(uint8_t pinAddres = PIN_ARDUINO_ADR){									//	В
 			}																						//
 			return Module_Metro_SUM;																//
 }																									//
+																									//
+//	Функция начальной инициализации модулей (объект управления шиной I2C и вывод PIN_ADDRES):		//
+#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__)									//
+	uint8_t iarduino_Metro_Start(TwoWire* i=&Wire, uint8_t pinAddres = PIN_ARDUINO_ADR ){ iMetroI2C.begin(i); return _iarduino_Metro_Start(pinAddres); }	//	Определяем функцию инициализации модуля	(Параметр: [объект для работы с аппаратной шиной I2C],[номер вывода к которому подключен вход PIN_ADDRES первого модуля]).
+#endif																								//
+#if defined(iarduino_I2C_Software_h)																//
+	uint8_t iarduino_Metro_Start(SoftTwoWire* i  , uint8_t pinAddres = PIN_ARDUINO_ADR ){ iMetroI2C.begin(i); return _iarduino_Metro_Start(pinAddres); }	//	Определяем функцию инициализации модуля	(Параметр:  объект для работы с программной шиной I2C,[номер вывода к которому подключен вход PIN_ADDRES первого модуля]).
+#endif																								//
 																									//
 #endif																								//

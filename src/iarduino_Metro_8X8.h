@@ -19,18 +19,18 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 								uint8_t sumtry  = 10;																//	Количество попыток чтения/записи.
 								if(step_end){																		//	Если установлен флаг step_end значит в данный момент выполняется автопрокрутка бегущей строки, тогда.
 								//	Отключаем автопрокрутку бегущей строки:											//
-									do{	result = objI2C.writeByte( i1, REG_DATA+14,0);								//	Записываем 0 в регистр REG_DATA+14 (TIME_STEP) модуля с адресом i1.
+									do{	result = iMetroI2C.writeByte( i1, REG_DATA+14,0);							//	Записываем 0 в регистр REG_DATA+14 (TIME_STEP) модуля с адресом i1.
 										sumtry	--;	if(!result){delay(1);}											//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 									}	while		(!result && sumtry>0);											//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									step_end=false; 																//	Сбрасываем флаг step_end.
 									delay(10);																		//
 								//	Считываем флаги регистра REG_DATA:												//
-									do{	result = objI2C.readBytes( i1, REG_DATA, data, 1);							//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт.
+									do{	result = iMetroI2C.readBytes( i1, REG_DATA, data, 1);						//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт.
 										sumtry	--;	if(!result){delay(1);}											//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 									}	while		(!result && sumtry>0);											//	Повторяем чтение если оно завершилось неудачей, но не более sumtry попыток.
 								//	Записываем флаги в регистр REG_DATA:											//
 									data[0] |= 0b00010000;															//	Устанавливаем в байте data[0] бит очистки дисплея CLEAR_SCR.
-									do{	result = objI2C.writeByte( i1, REG_DATA, data[0] );							//	Записываем значение data[0] в регистр REG_DATA модуля с адресом i1.
+									do{	result = iMetroI2C.writeByte( i1, REG_DATA, data[0] );						//	Записываем значение data[0] в регистр REG_DATA модуля с адресом i1.
 										sumtry	--;	if(!result){delay(1);}											//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 									}	while		(!result && sumtry>0);											//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									delay(10);																		//
@@ -40,7 +40,7 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 									case 0:																			//
 									//	Выполняем анимацию:															//
 										if(animation){																//	Если требуется выполнить анимацию, то ...
-											do{	result = objI2C.writeByte( i1, REG_DATA+18, animation);				//	Записываем значение animation в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
+											do{	result = iMetroI2C.writeByte( i1, REG_DATA+18, animation);			//	Записываем значение animation в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
 												sumtry	--;	if(!result){delay(1);}									//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 											}	while		(!result && sumtry>0);									//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 											if(result){break;}														//	Если номер анимации передан, то выходим из оператора switch (массив заполнится или сотрётся функцией анимации).
@@ -48,7 +48,7 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 									//	Чистим массив:																//
 										for(int i=0; i<8; i++){data[i]=0x00;}										//	Если адрес массива равен 0, то сбрасываем    в 0 все биты массива data.
 									//	Записываем массив:															//
-										do{	result = objI2C.writeBytes( i1, REG_DATA+1, data, 8);					//	Записываем 8 элементов массива data в модуль с адресом i1, начиная с регистра REG_DATA+1.
+										do{	result = iMetroI2C.writeBytes( i1, REG_DATA+1, data, 8);				//	Записываем 8 элементов массива data в модуль с адресом i1, начиная с регистра REG_DATA+1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
@@ -57,12 +57,12 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 									//	Если будет анимация, то предварительно чистим или заливаем дисплей:			//
 										if(animation){																//	Если требуется выполнить анимацию, то ...
 											if((animation-3)%4==0){													//	Если требуется выполнить анимацию появления на пустом фоне (функции анимации 3, 7, 11, 15, 19, 23, 27, ...), то сначала выполняем функцию № 1 - предварительной очистки дисплея (которая не даст увидеть изображение до анимации появления).
-												do{	result = objI2C.writeByte( i1, REG_DATA+18, 1);					//	Записываем 1 в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
+												do{	result = iMetroI2C.writeByte( i1, REG_DATA+18, 1);				//	Записываем 1 в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
 													sumtry	--;	if(!result){delay(1);}								//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 												}	while		(!result && sumtry>0);								//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 											}																		//
 											if((animation-5)%4==0){													//	Если требуется выполнить анимацию появления на залитом фоне (функции анимации 5, 9, 13, 17, 21, 25, 29, ...), то сначала выполняем функцию № 2 - предварительной заливки дисплея (которая не даст увидеть изображение до анимации появления).
-												do{	result = objI2C.writeByte( i1, REG_DATA+18, 2);					//	Записываем 1 в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
+												do{	result = iMetroI2C.writeByte( i1, REG_DATA+18, 2);				//	Записываем 1 в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
 													sumtry	--;	if(!result){delay(1);}								//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 												}	while		(!result && sumtry>0);								//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 											}																		//
@@ -72,26 +72,26 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 										if(addrArray==1){for(int i=0; i<8; i++){data[i]=0xFF;}}else					//	Если адрес массива равен 1, то устанавливаем в 1 все биты массива data.
 														{for(int i=0; i<8; i++){data[i]=*(uint8_t*)(addrArray+i);}}	//	Если адрес массива иной   , то заполняем массив data данными начиная с адреса addrArray.
 									//	Записываем массив:															//
-										do{	result = objI2C.writeBytes( i1, REG_DATA+1, data, 8);					//	Записываем 8 элементов массива data в модуль с адресом i1, начиная с регистра REG_DATA+1.
+										do{	result = iMetroI2C.writeBytes( i1, REG_DATA+1, data, 8);				//	Записываем 8 элементов массива data в модуль с адресом i1, начиная с регистра REG_DATA+1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									//	Выполняем анимацию:															//
 										if(animation){																//	Если требуется выполнить анимацию, то ...
-											do{	result = objI2C.writeByte( i1, REG_DATA+18, animation);				//	Записываем значение animation в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
+											do{	result = iMetroI2C.writeByte( i1, REG_DATA+18, animation);			//	Записываем значение animation в регистр REG_DATA+18 (FUNCTIONS) модуля с адресом i1.
 												sumtry	--;	if(!result){delay(1);}									//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 											}	while		(!result && sumtry>0);									//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 										}																			//
 									break;																			//
 								//	Действие № 2 - установить яркость дисплея:										//
 									case 2:																			//
-										do{	result = objI2C.writeByte( i1, REG_WRITE+1, brightness);				//	Записываем значение brightness в регистр REG_WRITE+1 (BRIGHTNESS) модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_WRITE+1, brightness);				//	Записываем значение brightness в регистр REG_WRITE+1 (BRIGHTNESS) модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
 								//	Действие № 3 - установить угол поворота дисплея:								//
 									case 3:																			//
 									//	Считываем флаги регистра REG_DATA:											//
-										do{	result = objI2C.readBytes( i1, REG_DATA, data, 1);						//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт.
+										do{	result = iMetroI2C.readBytes( i1, REG_DATA, data, 1);					//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем чтение если оно завершилось неудачей, но не более sumtry попыток.
 										if(!result){break;}															//	Если чтение не удалось то выходим из оператора switch.
@@ -99,19 +99,19 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 										data[0] &= 0b00111111;														//
 										data[0] |= (angle<<6);														//
 									//	Записываем флаги в регистр REG_DATA:										//
-										do{	result = objI2C.writeByte( i1, REG_DATA, data[0]);						//	Записываем значение data[0] в регистр REG_DATA модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA, data[0]);					//	Записываем значение data[0] в регистр REG_DATA модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
 								//	Действие № 4 - установить время паузы между прокрутками бегущей строки:			//
 									case 4:																			//
-										do{	result = objI2C.writeByte( i1, REG_DATA+15, time_pause);				//	Записываем значение time_pause в регистр REG_DATA+15 (TIME_PAUSE) модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA+15, time_pause);				//	Записываем значение time_pause в регистр REG_DATA+15 (TIME_PAUSE) модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
 								//	Действие № 5 - установить скорость прокрутки бегущей строки:					//
 									case 5:																			//
-										do{	result = objI2C.writeByte( i1, REG_DATA+14, time_step);					//	Записываем значение time_step в регистр REG_DATA+14 (TIME_STEP) модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA+14, time_step);				//	Записываем значение time_step в регистр REG_DATA+14 (TIME_STEP) модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
@@ -119,42 +119,42 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 									case 6:																			//
 									//	Считываем флаги регистра REG_DATA:											//
 										sumtry=10;																	//	Устанавливаем количество попыток чтения/записи.
-										do{	result = objI2C.readBytes( i1, REG_DATA, data, 1);						//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт.
+										do{	result = iMetroI2C.readBytes( i1, REG_DATA, data, 1);					//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем чтение если оно завершилось неудачей, но не более sumtry попыток.
 										if(!result){break;}															//	Если чтение не удалось то выходим из оператора switch.
 									//	Записываем флаги в регистр REG_DATA:										//
 										sumtry=10;																	//	Устанавливаем количество попыток чтения/записи.
 										data[0] |= 0b00001000;														//	Устанавливаем в байте data[0] бит очистки строки CLEAR_STR.
-										do{	result = objI2C.writeByte( i1, REG_DATA, data[0] );						//	Записываем значение data[0] в регистр REG_DATA модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA, data[0] );					//	Записываем значение data[0] в регистр REG_DATA модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while		(!result && sumtry>0);										//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 										if(!result){break;}															//	Если запись не удалась то выходим из оператора switch.
 									//	Ждём очистки строки (сброса флага CLEAR_STR в регистре REG_DATA):			//
-										do{	result = objI2C.readBytes( i1, REG_DATA, data, 1); delay(10);			//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт и ждём.
+										do{	result = iMetroI2C.readBytes( i1, REG_DATA, data, 1); delay(10);		//	Считываем из модуля i1, начиная с регистра REG_DATA, в массив data, 1 байт и ждём.
 										}	while		(!result || data[0]&0b00001000 );							//	Повторяем чтение если оно завершилось неудачей или установлен флаг CLEAR_STR в регистре REG_DATA.
 									//	Записываем в модуль текст бегущей строки:									//
 										lenString = 0;																//	Определяем номер записываемого символа бегущей строки.
 										do{	data[0] = *(uint8_t*)(addrString+lenString); lenString++;				//	Получаем код очередного символа из ОЗУ по адресу addrString+lenString (начало строки + номер символа).
 										//	Записываем код очередного символа в регистр TEXT_INPUT:					//
-											objI2C.writeByte( i1, REG_DATA+11, data[0] );                           //  Записываем значение data[0] в регистр REG_DATA+11 модуля с адресом i1.
+											iMetroI2C.writeByte( i1, REG_DATA+11, data[0] );						//  Записываем значение data[0] в регистр REG_DATA+11 модуля с адресом i1.
 										//	Ждём очистки регистра TEXT_INPUT:										//
-											do{	result=objI2C.readBytes(i1, REG_DATA+11, &data[1], 1); delay(10);	//	Считываем из модуля i1, начиная с регистра REG_DATA+11, в элемент массива data[1] по ссылке на него, 1 байт и ждём.
+											do{	result=iMetroI2C.readBytes(i1, REG_DATA+11, &data[1],1); delay(10);	//	Считываем из модуля i1, начиная с регистра REG_DATA+11, в элемент массива data[1] по ссылке на него, 1 байт и ждём.
 											}	while	(!result || data[1]>0 );									//	Повторяем чтение если оно завершилось неудачей или данные регистра TEXT_INPUT не стёрлись.
 										}	while		(lenString<512 && data[0]>0);								//	Продолжаем посимвольную запись текста бегущей строки пока не достигнута максимальная длина или не достигнут символ конца строки.
 									//	Записываем нулевое (начальное) положение бегущей строки:					//
 										sumtry=10;																	//	Устанавливаем количество попыток чтения/записи.
-										do{	result = objI2C.writeByte( i1, REG_DATA+12, 0 );						//	Записываем 0 в регистр REG_DATA+12 модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA+12, 0 );						//	Записываем 0 в регистр REG_DATA+12 модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while	(!result && sumtry>0);											//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 										sumtry=10;																	//	Устанавливаем количество попыток чтения/записи.
-										do{	result = objI2C.writeByte( i1, REG_DATA+13, 0 );						//	Записываем 0 в регистр REG_DATA+13 модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA+13, 0 );						//	Записываем 0 в регистр REG_DATA+13 модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while	(!result && sumtry>0);											//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
 								//	Действие № 7 - вывести символ на экран:											//
 									case 7:																			//
-										do{	result = objI2C.writeByte( i1, REG_DATA+10, val_char );					//	Записываем значение val_char в регистр SYMBOL_INPUT модуля с адресом i1.
+										do{	result = iMetroI2C.writeByte( i1, REG_DATA+10, val_char );					//	Записываем значение val_char в регистр SYMBOL_INPUT модуля с адресом i1.
 											sumtry	--;	if(!result){delay(1);}										//	Уменьшаем количество попыток записи и устанавливаем задержку при неудаче.
 										}	while	(!result && sumtry>0);											//	Повторяем запись если она завершилась неудачей, но не более sumtry попыток.
 									break;																			//
