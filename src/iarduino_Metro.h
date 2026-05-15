@@ -1,5 +1,5 @@
 //	Библиотека для работы с модулями линейки «Метро».
-//  Версия: 1.3.5
+//  Версия: 1.3.6
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: http://iarduino.ru/file/489.html
 //  Подробное описание функции бибилиотеки доступно по ссылке: http://iarduino.ru/file/489.html
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -514,7 +514,7 @@ uint8_t _iarduino_Metro_Start(uint8_t pinAddres){													//	Парамет�
 }																									//
 																									//
 //	Функция начальной инициализации модулей (объект управления шиной I2C и вывод PIN_ADDRES):		//
-#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__)									//
+#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire или платы её поддерживают...
 	uint8_t iarduino_Metro_Start(TwoWire* i=&Wire, uint8_t pinAddres = PIN_ARDUINO_ADR ){ iMetroI2C.init(i); return _iarduino_Metro_Start(pinAddres); }	//	Определяем функцию инициализации модуля	(Параметр: [объект для работы с аппаратной шиной I2C],[номер вывода к которому подключен вход PIN_ADDRES первого модуля]).
 #endif																								//
 #if defined(iarduino_I2C_Software_h)																//
