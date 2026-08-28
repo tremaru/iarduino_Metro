@@ -1,5 +1,5 @@
 //	Библиотека для работы с модулями линейки «Метро».
-//  Версия: 1.3.6
+//  Версия: 1.3.7
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: http://iarduino.ru/file/489.html
 //  Подробное описание функции бибилиотеки доступно по ссылке: http://iarduino.ru/file/489.html
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -263,7 +263,7 @@ class iarduino_Metro{																				//
 																														default:		return						0;
 																														break;
 																									}}
-		bool		on			(uint8_t *i0,		int	i1=NOT2,	int	i2=NOT2,	int	i3=NOT2		){	on(long(i0),i1,i2,i3); }																							//	Если первым аргументом является массив (изображение или строка), то обращаемся к одноимённой функции, указывая адрес ОЗУ первого элемента массива.
+		bool		on			(uint8_t *i0,		int	i1=NOT2,	int	i2=NOT2,	int	i3=NOT2		){	return on(long(i0),i1,i2,i3); }																						//	Если первым аргументом является массив (изображение или строка), то обращаемся к одноимённой функции, указывая адрес ОЗУ первого элемента массива.
 		bool		on			(long	i0=NOT4,	int	i1=NOT2,	int	i2=NOT2,	int	i3=NOT2		){	switch(model){	/************	Кнопка:						**/
 																														case MOD_KEY:	return 		  				0;
 																														break;
@@ -326,7 +326,7 @@ class iarduino_Metro{																				//
 																														default:		return						0;
 																														break;
 																									}}
-		bool		set			(String i0,			int	i1=NOT2,	int	i2=NOT2						){	uint16_t i3=i0.length()+1; unsigned char i4[i3]; i0.getBytes(i4, i3); if(i3>2){set(long(&i4[0]), i1, i2);}else{set(long(i4[0]));}	}
+		bool		set			(String i0,			int	i1=NOT2,	int	i2=NOT2						){	uint16_t i3=i0.length()+1; unsigned char i4[i3]; i0.getBytes(i4, i3); if(i3>2){return set(long(&i4[0]), i1, i2);}else{return set(long(i4[0]));}	}
 		bool		set			(long	i0=NOT4,	int	i1=NOT2,	int	i2=NOT2						){	switch(model){	/************	Кнопка:						**/
 																														case MOD_KEY:								objClass -> setVar	(0,  int(i0)			);			//	Передаём время TIME_HOLD_1 требуемое для установки флага HOLD_1: 0...25500 = 0,0...25,5 сек.
 																																									objClass -> setVar	(1,  i1					);			//	Передаём время TIME_HOLD_2 требуемое для установки флага HOLD_2: 0...25500 = 0,0...25,5 сек.
