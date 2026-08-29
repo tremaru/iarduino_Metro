@@ -1,5 +1,5 @@
 //	Библиотека для работы с модулями линейки «Метро».
-//  Версия: 1.3.7
+//  Версия: 1.3.8
 //  Последнюю версию библиотеки Вы можете скачать по ссылке: http://iarduino.ru/file/489.html
 //  Подробное описание функции бибилиотеки доступно по ссылке: http://iarduino.ru/file/489.html
 //  Библиотека является собственностью интернет магазина iarduino.ru и может свободно использоваться и распространяться!
@@ -20,7 +20,7 @@
 #include		"memorysaver.h"																		//	Подключаем файл «хранитель памяти»									(внутри файла есть комментарий поясняющий как сэкономить память программ)
 #include		"iarduino_Metro_I2C.h"																//	Подключаем библиотеку выбора реализации шины I2C.
 																									//
-#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire или платы её поддерживают...
+#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire.h или платы её поддерживают...
 #include	<Wire.h>																				//	Разрешаем использовать библиотеку Wire в данной библиотеке.
 #endif																								//
 #if defined( iarduino_I2C_Software_h )																//	Если библиотека iarduino_I2C_Software подключена в скетче...
@@ -268,7 +268,7 @@ class iarduino_Metro{																				//
 																														case MOD_KEY:	return 		  				0;
 																														break;
 																														/************	Светодиод:					**/
-																														case MOD_RGB:	if(i0==NOT4)			{	i0=0xFFFFFFL;									}		//	Если функция on() запущена без параметров, то включаем белый цвет.
+																														case MOD_RGB:	if(i0==(int)NOT4)		{	i0=0xFFFFFFL;									}		//	Если функция on() запущена без параметров, то включаем белый цвет.
 																																		if(i0>0xFFFFFFL)		{	objClass -> setVar	(0,  int(i0&0xFFL)		);	}		//	Передаём номер цветовой функции, которую требуется выполнить.
 																																		else					{	objClass -> setVar	(0,  0					);	}		//	Передаём номер цветовой функции = 0 (не выполнять цветовые функции).
 																																									objClass -> setVar	(1,  int(i0>>16) & 0xFF	);			//	Передаём коэффициент заполнения ШИМ для канала красного цвета: 0...255   = 0   ... 100  %
@@ -283,7 +283,7 @@ class iarduino_Metro{																				//
 																														case MOD_RES:	return 		  				0;
 																														break;
 																														/************	Звукоизлучатель:			**/
-																														case MOD_BUZ:	if(i0==NOT4)			{	i0=2700L;										}		//	Если функция on() запущена без параметров, то включаем тон 2,7 кГц.
+																														case MOD_BUZ:	if(i0==(int)NOT4)		{	i0=2700L;										}		//	Если функция on() запущена без параметров, то включаем тон 2,7 кГц.
 																																		if(i0>0xFFFFFFL)		{	objClass -> setVar	(0,  int(i0&0xFFL)		);	}		//	Передаём номер мелодии которую требуется воспроизвести.
 																																		else					{	objClass -> setVar	(0,  0					);	}		//	Передаём номер мелодии  = 0 (не воспроизводить мелодии).
 																																									objClass -> setVar	(1,  int(i0		 )		);			//	Передаём частоту тонального сигнала:                           0...32767 =  0...32767 Гц.
@@ -308,7 +308,7 @@ class iarduino_Metro{																				//
 																																		if(i0>=96  && i0<=99 )	{	objClass -> setVar	(4,  i0					);			//	Если функция on() запущена c параметром в диапазоне 96  ... 99 , значит требуется повернуть дисплей      , тогда передаём указанный угол поворота.
 																																		return						objClass -> action	(3,  int(address)		);	}		//	Если функция on() запущена c параметром в диапазоне 96  ... 99 , значит требуется повернуть дисплей      , тогда выполняем действие установки угла поворота дисплея.
 																																									objClass -> setVar	(2,  0					);			//	Сбрасываем значение переменной хранящей номер функции анимации.
-																																		if(i0==NOT4			 )	{	objClass -> setVar	(0,  0					);			//	Если функция on() запущена без параметров                      , значит нужно включить весь дисплей      , тогда передаём старший байт адреса массива равный 0.
+																																		if(i0==(int)NOT4	 )	{	objClass -> setVar	(0,  0					);			//	Если функция on() запущена без параметров                      , значит нужно включить весь дисплей      , тогда передаём старший байт адреса массива равный 0.
 																																									objClass -> setVar	(1,  1					);	}		//	                                                                                                                          младший байт адреса массива равный 1, это значит требуется установить в 1 все биты массива.
 																																		if(i0> 255			 )	{ 	objClass -> setVar	(0,  int(i0>>16)		);			//	Если первый параметр функции on() лежит за пределом 255        , значит первый параметр является массивом, тогда передаём старший байт адреса массива который требуется вывести.
 																																									objClass -> setVar	(1,  int(i0&0x0000FFFF)	);	}		//	                                                                                                                          младший байт адреса массива который требуется вывести.
@@ -326,7 +326,7 @@ class iarduino_Metro{																				//
 																														default:		return						0;
 																														break;
 																									}}
-		bool		set			(String i0,			int	i1=NOT2,	int	i2=NOT2						){	uint16_t i3=i0.length()+1; unsigned char i4[i3]; i0.getBytes(i4, i3); if(i3>2){return set(long(&i4[0]), i1, i2);}else{return set(long(i4[0]));}	}
+		bool		set			(String i0,			int	i1=NOT2,	int	i2=NOT2						){	uint16_t i3=i0.length()+1; unsigned char i4[i3]; i0.getBytes(i4, i3); if(i3>2){return set(long(&i4[0]), i1, i2);}else{return set(long(i4[0]));}	return false; }
 		bool		set			(long	i0=NOT4,	int	i1=NOT2,	int	i2=NOT2						){	switch(model){	/************	Кнопка:						**/
 																														case MOD_KEY:								objClass -> setVar	(0,  int(i0)			);			//	Передаём время TIME_HOLD_1 требуемое для установки флага HOLD_1: 0...25500 = 0,0...25,5 сек.
 																																									objClass -> setVar	(1,  i1					);			//	Передаём время TIME_HOLD_2 требуемое для установки флага HOLD_2: 0...25500 = 0,0...25,5 сек.
@@ -359,14 +359,15 @@ class iarduino_Metro{																				//
 																																		return 		 				objClass -> action	(4,  int(address)		);			//	Устанавливаем заданный уровень на выводе.
 																														break;
 																														/************	Светодиодная матрица:		**/
-																														case MOD_8X8:	if(i0!=NOT4 && i1==NOT2){	objClass -> setVar	(6,  0					);			//	Если указан только 1 параметр функции set(), значит указан код символа, тогда останавливаем автопрокрутку.
+																														case MOD_8X8:	
+																																if(i0!=(int)NOT4 && i1==(int)NOT2){	objClass -> setVar	(6,  0					);			//	Если указан только 1 параметр функции set(), значит указан код символа, тогда останавливаем автопрокрутку.
 																																									objClass -> setVar	(9,  int(i0)			);			//	Если указан только 1 параметр функции set(), значит указан код символа, тогда передаём указанный код символа.
 																																		return 		 				objClass -> action	(7,  int(address)		);	}		//	Если указан только 1 параметр функции set(), значит указан код символа, тогда записываем переданный код символа в модуль.
-																																		if(i0!=NOT4 && i1!=NOT2){	objClass -> setVar	(6,  0					);			//	Если указан 1 и 2 параметры функции set(), значит указан текст бегущей строки, тогда останавливаем автопрокрутку.
+																																if(i0!=(int)NOT4 && i1!=(int)NOT2){	objClass -> setVar	(6,  0					);			//	Если указан 1 и 2 параметры функции set(), значит указан текст бегущей строки, тогда останавливаем автопрокрутку.
 																																									objClass -> setVar	(7,  int(i0>>16)		);			//	Передаём старший байт адреса начала текста в ОЗУ.
 																																									objClass -> setVar	(8,  int(i0&0x0000FFFF)	);			//	Передаём младший байт адреса начала текста в ОЗУ.
 																																			if 		 			(	objClass -> action	(6,  int(address)		)	){		//	Если текст записан в модуль, то ...
-																																				if(i2==NOT2)  	{	objClass -> setVar	(5,  0					);	}		//	Если не указан третий параметр функции set(), значит время паузы между прокрутками бегущей строки не указано, тогда передаём время 0.0 сек.
+																																				if(i2==(int)NOT2){	objClass -> setVar	(5,  0					);	}		//	Если не указан третий параметр функции set(), значит время паузы между прокрутками бегущей строки не указано, тогда передаём время 0.0 сек.
 																																				else			{	if(i2!=0 && i2<100) {i2=100;					}
 																																									objClass -> setVar	(5,  int(i2)			);	}		//	Если    указан третий параметр функции set(), значит время паузы между прокрутками бегущей строки    указано, тогда передаём указанное время.
 																																									objClass -> action	(4,  int(address)		);			//	Если    указан второй параметр функции set(), тогда записываем переданное время паузы в модуль.
@@ -489,7 +490,7 @@ uint8_t _iarduino_Metro_Start(uint8_t pinAddres){													//	Парамет�
 			#if defined(__AVR_ATmega32U4__) | defined(__AVR_ATmega328__) | defined(__AVR_ATmega328P__) | defined(__AVR_ATmega1280__) | defined(__AVR_ATmega1281__) | defined(__AVR_ATmega1284P__) | defined(__AVR_ATmega2560__) | defined(__AVR_ATmega2561__)
 				extern int __heap_start, *__brkval;													//	Подключаем переменные для получения адресов начала и конца «кучи».
 				heapEnd = (__brkval==0)? (int)&__heap_start : (int)__brkval;						//	Определяем адрес конца «кучи».
-				if((heapEnd + MEM_ARDUINO_FREE + sizeof(iarduino_Metro)*Module_Metro_SUM) > int(SP)){return 0;}	//	Если конец кучи + MEM_ARDUINO_FREE байт + изначальное место под массив Metro залезит на стек, то выходим из функции возвращая 0.
+				if((int)(heapEnd + MEM_ARDUINO_FREE + sizeof(iarduino_Metro)*Module_Metro_SUM) > int(SP)){return 0;}	//	Если конец кучи + MEM_ARDUINO_FREE байт + изначальное место под массив Metro залезит на стек, то выходим из функции возвращая 0.
 			#endif																					//
 			Metro = (iarduino_Metro*) malloc(sizeof(iarduino_Metro)*Module_Metro_SUM);				//	Выделяем под массив Metro такой объем памяти при котором количество элементов массива равно количеству найденных модулей линейки Module_Metro_SUM.
 			for(i=0; i<Module_Metro_SUM; i++){														//	Проходим по всем найденным модулям линейки.
@@ -514,7 +515,7 @@ uint8_t _iarduino_Metro_Start(uint8_t pinAddres){													//	Парамет�
 }																									//
 																									//
 //	Функция начальной инициализации модулей (объект управления шиной I2C и вывод PIN_ADDRES):		//
-#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire или платы её поддерживают...
+#if defined(TwoWire_h) || defined(__ARDUINO_WIRE_IMPLEMENTATION__) || defined(__AVR_ATmega328__) || defined(__AVR_ATmega328P__) || defined(__AVR_ATmega32U4__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega2560__) || defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_RP2040) || defined(RENESAS_CORTEX_M4) // Если подключена библиотека Wire.h или платы её поддерживают...
 	uint8_t iarduino_Metro_Start(TwoWire* i=&Wire, uint8_t pinAddres = PIN_ARDUINO_ADR ){ iMetroI2C.init(i); return _iarduino_Metro_Start(pinAddres); }	//	Определяем функцию инициализации модуля	(Параметр: [объект для работы с аппаратной шиной I2C],[номер вывода к которому подключен вход PIN_ADDRES первого модуля]).
 #endif																								//
 #if defined(iarduino_I2C_Software_h)																//

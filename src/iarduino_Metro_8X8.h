@@ -8,9 +8,9 @@ class iarduino_Metro_8X8: public iarduino_Metro_BASE{																//	Опре
 	/**	дублирую функции полиморфного класса iarduino_Metro_BASE	**/												//
 																													//
 //		Функции не используемые в данном модуле:																	//
-		bool	begin			(int i0=NOT2, int i1=NOT2	){return 0;}											//	Инициализация модуля.
-		int		test			(int i0=NOT2, int i1=NOT2	){return 0;}											//	Самотестирование модуля.
-		long	getVar			(int i0=NOT2				){return 0;}											//	Возврат значений переменных.
+		bool	begin			(int i0=NOT2, int i1=NOT2	){ (void)(i0); (void)(i1); return 0;}					//	Инициализация модуля.			Избавляемся от предупреждения неиспользуемого параметра.
+		int		test			(int i0=NOT2, int i1=NOT2	){ (void)(i0); (void)(i1); return 0;}					//	Самотестирование модуля.		Избавляемся от предупреждения неиспользуемого параметра.
+		long	getVar			(int i0=NOT2				){ (void)(i0);             return 0;}					//	Возврат значений переменных.	Избавляемся от предупреждения неиспользуемого параметра.
 																													//
 //		Выполняем действия:																							//
 		bool	action			(int i0=NOT2, int i1=NOT2	){														//	
